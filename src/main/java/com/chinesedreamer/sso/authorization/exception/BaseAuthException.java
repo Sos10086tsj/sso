@@ -1,4 +1,4 @@
-package com.chinesedreamer.sso.exception.authorization;
+package com.chinesedreamer.sso.authorization.exception;
 
 import com.chinesedreamer.sso.exception.BaseException;
 

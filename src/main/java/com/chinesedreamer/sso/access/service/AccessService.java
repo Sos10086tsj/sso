@@ -1,6 +1,6 @@
 package com.chinesedreamer.sso.access.service;
 
-import com.chinesedreamer.sso.api.vo.ApiResult;
+import com.chinesedreamer.sso.api.ApiResult;
 
 /**
  * application登陆、登出SSO接口类
@@ -15,7 +15,7 @@ public interface AccessService {
 	 * @param password
 	 * @return JSON string
 	 */
-	public String login(String applicationCode, String username, String password);
+	public String login(String applicationCode, String username, String password, String sessionId, String applicationSessionId, String ip);
 	
 	/**
 	 * 用户登陆
@@ -24,7 +24,7 @@ public interface AccessService {
 	 * @param password
 	 * @return
 	 */
-	public ApiResult loginSso(String applicationCode, String username, String password);
+	public ApiResult loginSso(String applicationCode, String username, String password, String sessionId, String applicationSessionId, String ip);
 	
 	/**
 	 * 用户登出
@@ -41,4 +41,28 @@ public interface AccessService {
 	 * @return JSON string
 	 */
 	public ApiResult logoutSso(String applicationCode, String username);
+	
+	/**
+	 * 判断是否已经SSO登录
+	 * @param applicationCode
+	 * @param username
+	 * @return
+	 */
+	public boolean checkSsoLogined(String applicationCode, String username);
+	
+	/**
+	 * 获取用户已登录信息
+	 * @param applicationCode
+	 * @param username
+	 * @return
+	 */
+	public String getUserSession(String applicationCode, String username);
+	
+	/**
+	 * 获取用户已登录信息
+	 * @param applicationCode
+	 * @param username
+	 * @return
+	 */
+	public ApiResult getSsoUserSession(String applicationCode, String username);
 }

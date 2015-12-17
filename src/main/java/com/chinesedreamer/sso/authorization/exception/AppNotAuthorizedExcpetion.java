@@ -1,4 +1,4 @@
-package com.chinesedreamer.sso.exception.authorization;
+package com.chinesedreamer.sso.authorization.exception;
 
 /**
  * 请求访问缺少appCode或者appKey
