@@ -1,5 +1,4 @@
 <%@include file="/WEB-INF/jsp/base/taglibs.jsp" %>
-<c:set var="ctx" value="/sso"></c:set>
 
 <link rel="icon" type="image/gif" href="${ctx }/resources/images/logo.ico">
 <!-- jQuery -->
