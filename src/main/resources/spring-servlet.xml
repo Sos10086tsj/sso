@@ -12,7 +12,7 @@ http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
 
 	<!-- Spring 注释 -->
 	<context:component-scan
-		base-package="com.chinesedreamer.rating.**.controller,demo.controller"
+		base-package="com.chinesedreamer.sso.**.controller,demo.controller"
 		use-default-filters="false">
 		<context:include-filter type="annotation"
 			expression="org.springframework.stereotype.Controller" />

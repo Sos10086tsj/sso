@@ -1,12 +1,16 @@
 package com.chinesedreamer.sso.user.model;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Table;
 
 import com.chinesedreamer.sso.base.jpa.model.BaseEntity;
 import com.chinesedreamer.sso.user.constant.UserStatus;
 
+@Entity
+@Table(name = "user")
 public class User extends BaseEntity<Long>{
 
 	/**

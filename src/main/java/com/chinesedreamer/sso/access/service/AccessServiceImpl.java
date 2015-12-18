@@ -13,7 +13,9 @@ import com.alibaba.fastjson.JSON;
 import com.chinesedreamer.sso.api.ApiResult;
 import com.chinesedreamer.sso.api.SsoUserSession;
 import com.chinesedreamer.sso.authorization.repository.ApplicationGroupRepository;
+import com.chinesedreamer.sso.base.cache.BaseCacheAspect;
 import com.chinesedreamer.sso.base.jpa.constant.ApiResultConstant;
+import com.chinesedreamer.sso.session.constant.SsoLoginType;
 import com.chinesedreamer.sso.session.exception.SsoSessionOverdueException;
 import com.chinesedreamer.sso.session.model.SsoSession;
 import com.chinesedreamer.sso.session.repository.SsoSessionRepository;
@@ -26,7 +28,7 @@ import com.chinesedreamer.sso.user.repository.UserRepository;
 import com.chinesedreamer.sso.util.EncryptionUtil;
 
 @Service
-public class AccessServiceImpl implements AccessService{
+public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 	
 	private Logger logger = LoggerFactory.getLogger(AccessServiceImpl.class);
 	
@@ -36,6 +38,14 @@ public class AccessServiceImpl implements AccessService{
 	private SsoSessionRepository ssoSessionRepository;
 	@Resource
 	private ApplicationGroupRepository applicationGroupRepository;
+	
+	private final String USER_SESSION_NAME = "ssoSessionCache";
+	private final String USER_SESSION_CACHE_KEY = "ssoSessionKey";
+	private final String USER_SESSION_CACHE_DELIMITER = "-";
+	
+	public AccessServiceImpl(){
+		setCacheName(USER_SESSION_NAME);
+	}
 
 	@Override
 	public String login(String applicationCode, String username, String password, String sessionId, String applicationSessionId, String ip) {
@@ -43,6 +53,8 @@ public class AccessServiceImpl implements AccessService{
 		if (apiResult.getSuccess()) {
 			SsoSession ssoSession = this.saveSessionAfterLogin(username, applicationCode, sessionId, applicationSessionId, ip);
 			apiResult.setData(this.convert2UserSession(ssoSession));
+			
+			this.save2Cache(applicationCode, username, apiResult);
 		}
 		return JSON.toJSONString(apiResult);
 	}
@@ -53,8 +65,15 @@ public class AccessServiceImpl implements AccessService{
 		if (apiResult.getSuccess()) {
 			SsoSession ssoSession = this.saveSessionAfterLogin(username, applicationCode, sessionId, applicationSessionId, ip);
 			apiResult.setData(this.convert2UserSession(ssoSession));
+			
+			this.save2Cache(applicationCode, username, apiResult);
 		}
 		return apiResult;
+	}
+	
+	private void save2Cache(String applicationCode, String username,ApiResult apiResult){
+		String groupCode = this.applicationGroupRepository.findByApplicationCode(applicationCode).getGroupCode();
+		this.put(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + groupCode + USER_SESSION_CACHE_DELIMITER + username, (SsoUserSession)apiResult.getData());
 	}
 	
 	/**
@@ -109,21 +128,44 @@ public class AccessServiceImpl implements AccessService{
 		ssoSession.setLoginData(new Date());
 		ssoSession.setSessionId(sessionId);
 		ssoSession.setUsername(username);
+		ssoSession.setLoginType(SsoLoginType.USER_LOGIN);
 		return this.ssoSessionRepository.save(ssoSession);
 	}
 
 	@Override
 	public String logout(String applicationCode, String username) {
 		ApiResult apiResult = this.userLogout(applicationCode, username);
+		this.clearCacheAfterLogout(applicationCode, username);
 		return JSON.toJSONString(apiResult);
 	}
 
 	@Override
 	public ApiResult logoutSso(String applicationCode, String username) {
 		ApiResult apiResult = this.userLogout(applicationCode, username);
+		this.clearCacheAfterLogout(applicationCode, username);
 		return apiResult;
 	}
 
+	
+	/**
+	 * 登出时清理缓存
+	 * @param applicationCode
+	 * @param username
+	 */
+	private void clearCacheAfterLogout(String applicationCode, String username){
+		String groupCode = this.applicationGroupRepository.findByApplicationCode(applicationCode).getGroupCode();
+		List<SsoSession> ssoSessions = this.ssoSessionRepository.findByApplicationGroupAndUsername(groupCode, username);
+		if (null == ssoSessions || ssoSessions.size() == 0) {
+			this.evict(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + groupCode + USER_SESSION_CACHE_DELIMITER + username);
+		}
+	}
+	
+	/**
+	 * 登出操作
+	 * @param applicationCode
+	 * @param username
+	 * @return
+	 */
 	private ApiResult userLogout(String applicationCode, String username){
 		ApiResult apiResult = new ApiResult();
 		SsoSession ssoSession = this.ssoSessionRepository.findByApplicationCodeAndUsername(applicationCode,username);
@@ -166,7 +208,30 @@ public class AccessServiceImpl implements AccessService{
 		}
 		SsoSession template = ssoSessions.get(0);
 		apiResult.setData(this.convert2UserSession(template));
+		
+		//模拟登陆
+		this.mockUserLogin(applicationCode, username);
 		return apiResult;
+	}
+	
+	/**
+	 * 模拟用户登陆
+	 * @param applicationCode
+	 * @param username
+	 */
+	private void mockUserLogin(String applicationCode, String username){
+		SsoSession ssoSession = this.ssoSessionRepository.findByApplicationCodeAndUsername(applicationCode,username);
+		if (null == ssoSession) {
+			ssoSession = new SsoSession();
+		}
+		ssoSession.setApplicationCode(applicationCode);
+		String groupCode = this.applicationGroupRepository.findByApplicationCode(applicationCode).getGroupCode();
+		ssoSession.setApplicationGroup(groupCode);
+		ssoSession.setLoginData(new Date());
+		ssoSession.setUsername(username);
+		ssoSession.setLoginType(SsoLoginType.MOCK_LOGIN);
+		ssoSession = this.ssoSessionRepository.save(ssoSession);
+		this.put(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + groupCode + USER_SESSION_CACHE_DELIMITER + username, this.convert2UserSession(ssoSession));
 	}
 	
 	private SsoUserSession convert2UserSession(SsoSession ssoSession) {

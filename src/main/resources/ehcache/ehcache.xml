@@ -12,7 +12,7 @@
     </defaultCache>
 
     <!-- 登录记录缓存 锁定1h -->
-    <cache name="sessionCache"
+    <cache name="ssoSessionCache"
            maxEntriesLocalHeap="2000"
            eternal="false"
            timeToIdleSeconds="6000"

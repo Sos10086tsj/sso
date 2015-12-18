@@ -1,0 +1,18 @@
+<%@include file="/WEB-INF/jsp/base/taglibs.jsp" %>
+<c:set var="ctx" value="/sso"></c:set>
+
+<link rel="icon" type="image/gif" href="${ctx }/resources/images/logo.ico">
+<!-- jQuery -->
+<script type="text/javascript" src="${ctx}/resources/components/jQuery/jquery-1.9.1.min.js"></script>
+
+<!-- Extjs4.2 -->
+<link rel="stylesheet" type="text/css" href="${ctx}/resources/components/extjs4.2/resources/css/ext-all-neptune.css" />
+<script type="text/javascript" src="${ctx}/resources/components/extjs4.2/ext-all.js"></script>
+<script type="text/javascript" src="${ctx}/resources/components/extjs4.2/local/ext-lang-zh_CN.js"></script>
+
+<!-- sso -->
+<script type="text/javascript" src="${ctx}/resources/js/sso.js"></script>
+
+<script>
+	var ctx = '${ctx}';
+</script>

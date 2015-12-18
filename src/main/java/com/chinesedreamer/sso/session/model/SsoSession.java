@@ -3,11 +3,18 @@ package com.chinesedreamer.sso.session.model;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Table;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.chinesedreamer.sso.base.jpa.model.BaseEntity;
+import com.chinesedreamer.sso.session.constant.SsoLoginType;
 
+@Entity
+@Table(name = "sso_session")
 public class SsoSession extends BaseEntity<Long>{
 
 	/**
@@ -36,6 +43,10 @@ public class SsoSession extends BaseEntity<Long>{
 	@Column(name = "login_date")
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date loginData;//登陆时间
+	
+	@Column(name = "login_type")
+	@Enumerated(EnumType.ORDINAL)
+	private SsoLoginType loginType;
 
 	public String getSessionId() {
 		return sessionId;
@@ -91,6 +102,14 @@ public class SsoSession extends BaseEntity<Long>{
 
 	public void setLoginData(Date loginData) {
 		this.loginData = loginData;
+	}
+
+	public SsoLoginType getLoginType() {
+		return loginType;
+	}
+
+	public void setLoginType(SsoLoginType loginType) {
+		this.loginType = loginType;
 	}
 	
 	

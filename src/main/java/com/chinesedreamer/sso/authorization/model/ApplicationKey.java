@@ -1,9 +1,13 @@
 package com.chinesedreamer.sso.authorization.model;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
 import com.chinesedreamer.sso.base.jpa.model.BaseEntity;
 
+@Entity
+@Table(name = "application_key")
 public class ApplicationKey extends BaseEntity<Long>{
 
 	/**

@@ -16,30 +16,20 @@
           
     <bean id="propertyConfigurer"  
     	class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">    
-    	<property name="location"> 
-    		<value>classpath:application.properties</value>  
+    	<property name="locations">
+    		<list>
+    			<value>classpath:datasource.properties</value>
+    			<value>classpath:application.properties</value>  
+    		</list>
     	</property>
     	<property name="fileEncoding" value="utf-8" />  
     </bean>
           
-	<context:component-scan base-package="com.chinesedreamer.rating.*">
+	<context:component-scan base-package="com.chinesedreamer.sso.*">
 		<context:exclude-filter type="annotation"
 			expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
 	<context:annotation-config />
-	
-	<!-- data source 
-	<bean class="org.apache.commons.dbcp.BasicDataSource"
-		destroy-method="close" id="dataSource">
-		<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
-		<property name="url" value="${datasource.url}"></property>
-		<property name="username" value="${datasource.username}" />
-		<property name="password" value="${datasource.password}" />
-		<property name="initialSize" value="${datasource.initialSize}" />
-		<property name="maxActive" value="${datasource.maxActive}" />
-		<property name="maxIdle" value="${datasource.maxIdle}" />
-		<property name="minIdle" value="${datasource.minIdle}" />
-	</bean>-->
 	
 	<!-- data source -->
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
@@ -75,7 +65,7 @@
 		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="dataSource" ref="dataSource" />
 		<property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter" />
-		<property name="packagesToScan" value="com.chinesedreamer.rating.**.model" /><!--待扫描的实体类包，不再需要persistence.xml了 -->
+		<property name="packagesToScan" value="com.chinesedreamer.sso.**.model" /><!--待扫描的实体类包，不再需要persistence.xml了 -->
 		<property name="jpaProperties">
 			<props>
 				<prop key="hibernate.connection.useUnicode">true</prop>
@@ -98,7 +88,7 @@
 	</bean>
 
 	<!-- Spring Data Jpa配置 -->
-	<jpa:repositories base-package="com.chinesedreamer.rating.**.repository"
+	<jpa:repositories base-package="com.chinesedreamer.sso.**.repository"
 		transaction-manager-ref="transactionManager"
 		entity-manager-factory-ref="entityManagerFactory" />
 
@@ -122,12 +112,12 @@
 	<aop:config expose-proxy="true" proxy-target-class="true">
 		<!-- 事务开在servier层 -->
 		<aop:pointcut id="txPointcut"
-			expression="execution(* com.chinesedreamer.rating..service..*.*(..))" />
+			expression="execution(* com.chinesedreamer.sso..service..*.*(..))" />
 		<aop:advisor id="txAdvisor" advice-ref="txAdvice"
 			pointcut-ref="txPointcut" />
 	</aop:config>
 	
-	<!-- velocity -->
+	<!-- velocity 
 	<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
         <property name="velocityProperties">
             <props>
@@ -137,7 +127,7 @@
         		<prop key="class.resource.loader.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</prop>
         	</props>
         </property>
-    </bean>
+    </bean>-->
 	
 	<import resource="ehcache-config.xml" />
 	
