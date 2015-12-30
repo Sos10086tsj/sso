@@ -39,3 +39,10 @@ CREATE TABLE `sso`.`user` (
   `password` VARCHAR(45) NULL COMMENT '',
   PRIMARY KEY (`id`)  COMMENT '',
   INDEX `INX_USER_USERNAME` (`username` ASC)  COMMENT '');
+
+ALTER TABLE `sso`.`application_key` 
+ADD COLUMN `application_name` VARCHAR(45) CHARACTER SET 'utf8' NULL COMMENT '' AFTER `application_key`;
+
+ALTER TABLE `sso`.`application_group` 
+DROP INDEX `group_code_UNIQUE` ,
+ADD UNIQUE INDEX `group_code_UNIQUE` (`group_code` ASC, `application_code` ASC)  COMMENT '';

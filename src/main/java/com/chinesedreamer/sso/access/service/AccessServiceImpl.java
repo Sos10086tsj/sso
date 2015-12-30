@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -48,32 +49,31 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 	}
 
 	@Override
-	public String login(String applicationCode, String username, String password, String sessionId, String applicationSessionId, String ip) {
+	public String login(String applicationCode, String username, String password, String applicationSessionId, String ip) {
 		ApiResult apiResult = this.login(username, password);
 		if (apiResult.getSuccess()) {
-			SsoSession ssoSession = this.saveSessionAfterLogin(username, applicationCode, sessionId, applicationSessionId, ip);
+			SsoSession ssoSession = this.saveSessionAfterLogin(username, applicationCode, applicationSessionId, ip);
 			apiResult.setData(this.convert2UserSession(ssoSession));
 			
-			this.save2Cache(applicationCode, username, apiResult);
+			this.save2Cache(ssoSession.getApplicationSessionId(), apiResult);
 		}
 		return JSON.toJSONString(apiResult);
 	}
 
 	@Override
-	public ApiResult loginSso(String applicationCode, String username, String password, String sessionId, String applicationSessionId, String ip) {
+	public ApiResult loginSso(String applicationCode, String username, String password, String applicationSessionId, String ip) {
 		ApiResult apiResult = this.login(username, password);
 		if (apiResult.getSuccess()) {
-			SsoSession ssoSession = this.saveSessionAfterLogin(username, applicationCode, sessionId, applicationSessionId, ip);
+			SsoSession ssoSession = this.saveSessionAfterLogin(username, applicationCode, applicationSessionId, ip);
 			apiResult.setData(this.convert2UserSession(ssoSession));
 			
-			this.save2Cache(applicationCode, username, apiResult);
+			this.save2Cache(ssoSession.getApplicationSessionId(), apiResult);
 		}
 		return apiResult;
 	}
 	
-	private void save2Cache(String applicationCode, String username,ApiResult apiResult){
-		String groupCode = this.applicationGroupRepository.findByApplicationCode(applicationCode).getGroupCode();
-		this.put(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + groupCode + USER_SESSION_CACHE_DELIMITER + username, (SsoUserSession)apiResult.getData());
+	private void save2Cache(String sessionId,ApiResult apiResult){
+		this.put(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + sessionId, (SsoUserSession)apiResult.getData());
 	}
 	
 	/**
@@ -116,7 +116,7 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 	 * @param applicationCode
 	 * @param sessionId
 	 */
-	private SsoSession saveSessionAfterLogin(String username,String applicationCode,String sessionId, String applicationSessionId, String ip){
+	private SsoSession saveSessionAfterLogin(String username,String applicationCode,String applicationSessionId, String ip){
 		SsoSession ssoSession = this.ssoSessionRepository.findByApplicationCodeAndUsername(applicationCode,username);
 		if (null == ssoSession) {
 			ssoSession = new SsoSession();
@@ -126,7 +126,6 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 		ssoSession.setApplicationSessionId(applicationSessionId);
 		ssoSession.setIp(ip);
 		ssoSession.setLoginData(new Date());
-		ssoSession.setSessionId(sessionId);
 		ssoSession.setUsername(username);
 		ssoSession.setLoginType(SsoLoginType.USER_LOGIN);
 		return this.ssoSessionRepository.save(ssoSession);
@@ -135,14 +134,14 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 	@Override
 	public String logout(String applicationCode, String username) {
 		ApiResult apiResult = this.userLogout(applicationCode, username);
-		this.clearCacheAfterLogout(applicationCode, username);
+		this.clearCacheAfterLogout((String)apiResult.getData());
 		return JSON.toJSONString(apiResult);
 	}
 
 	@Override
 	public ApiResult logoutSso(String applicationCode, String username) {
 		ApiResult apiResult = this.userLogout(applicationCode, username);
-		this.clearCacheAfterLogout(applicationCode, username);
+		this.clearCacheAfterLogout((String)apiResult.getData());
 		return apiResult;
 	}
 
@@ -152,11 +151,9 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 	 * @param applicationCode
 	 * @param username
 	 */
-	private void clearCacheAfterLogout(String applicationCode, String username){
-		String groupCode = this.applicationGroupRepository.findByApplicationCode(applicationCode).getGroupCode();
-		List<SsoSession> ssoSessions = this.ssoSessionRepository.findByApplicationGroupAndUsername(groupCode, username);
-		if (null == ssoSessions || ssoSessions.size() == 0) {
-			this.evict(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + groupCode + USER_SESSION_CACHE_DELIMITER + username);
+	private void clearCacheAfterLogout(String sessionId){
+		if (StringUtils.isNotEmpty(sessionId)) {
+			this.evict(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + sessionId);
 		}
 	}
 	
@@ -170,6 +167,7 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 		ApiResult apiResult = new ApiResult();
 		SsoSession ssoSession = this.ssoSessionRepository.findByApplicationCodeAndUsername(applicationCode,username);
 		if (null != ssoSession) {
+			apiResult.setData(ssoSession.getApplicationSessionId());
 			this.ssoSessionRepository.delete(ssoSession);
 		}
 		apiResult.setSuccess(Boolean.TRUE);
@@ -186,18 +184,18 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 	}
 
 	@Override
-	public String getUserSession(String applicationCode, String username) {
-		ApiResult apiResult = this.getUserSessionApiResult(applicationCode, username);
+	public String getUserSession(String applicationCode, String username, String applicationSessionId, String ip) {
+		ApiResult apiResult = this.getUserSessionApiResult(applicationCode, username, applicationCode, ip);
 		return JSON.toJSONString(apiResult);
 	}
 
 	@Override
-	public ApiResult getSsoUserSession(String applicationCode, String username) {
-		ApiResult apiResult = this.getUserSessionApiResult(applicationCode, username);
+	public ApiResult getSsoUserSession(String applicationCode, String username, String applicationSessionId, String ip) {
+		ApiResult apiResult = this.getUserSessionApiResult(applicationCode, username, applicationCode, ip);
 		return apiResult;
 	}
 	
-	private ApiResult getUserSessionApiResult(String applicationCode, String username) {
+	private ApiResult getUserSessionApiResult(String applicationCode, String username, String applicationSessionId, String ip) {
 		ApiResult apiResult = new ApiResult();
 		List<SsoSession> ssoSessions = this.ssoSessionRepository.findByApplicationGroupAndUsername(this.applicationGroupRepository.findByApplicationCode(applicationCode).getGroupCode(), username);
 		if (null == ssoSessions || ssoSessions.size() == 0) {
@@ -210,7 +208,8 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 		apiResult.setData(this.convert2UserSession(template));
 		
 		//模拟登陆
-		this.mockUserLogin(applicationCode, username);
+		this.mockUserLogin(applicationCode, username, applicationCode, ip);
+		apiResult.setSuccess(Boolean.TRUE);
 		return apiResult;
 	}
 	
@@ -219,7 +218,7 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 	 * @param applicationCode
 	 * @param username
 	 */
-	private void mockUserLogin(String applicationCode, String username){
+	private void mockUserLogin(String applicationCode, String username, String applicationSessionId, String ip){
 		SsoSession ssoSession = this.ssoSessionRepository.findByApplicationCodeAndUsername(applicationCode,username);
 		if (null == ssoSession) {
 			ssoSession = new SsoSession();
@@ -230,8 +229,10 @@ public class AccessServiceImpl extends BaseCacheAspect implements AccessService{
 		ssoSession.setLoginData(new Date());
 		ssoSession.setUsername(username);
 		ssoSession.setLoginType(SsoLoginType.MOCK_LOGIN);
+		ssoSession.setApplicationSessionId(applicationSessionId);
+		ssoSession.setIp(ip);
 		ssoSession = this.ssoSessionRepository.save(ssoSession);
-		this.put(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + groupCode + USER_SESSION_CACHE_DELIMITER + username, this.convert2UserSession(ssoSession));
+		this.put(USER_SESSION_CACHE_KEY + USER_SESSION_CACHE_DELIMITER + applicationSessionId, this.convert2UserSession(ssoSession));
 	}
 	
 	private SsoUserSession convert2UserSession(SsoSession ssoSession) {

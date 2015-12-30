@@ -12,7 +12,20 @@
           http://www.springframework.org/schema/task 
           http://www.springframework.org/schema/task/spring-task-3.1.xsd   
           ">
-	
+          
+	<bean id="authorizationService" class="com.chinesedreamer.sso.authorization.service.AuthorizationServiceImpl"></bean>
+	<bean id="ssoAuthorizationFilter" class="com.chinesedreamer.sso.web.filter.SsoAuthorizationFilter" >
+		<property name="authorizationService"> 
+			<ref bean="authorizationService"/>  
+    	</property>
+		<property name="whiteList">
+			<list>
+				<value>/components/*</value>
+				<value>/js/*</value>
+				<value>/css/*</value>
+			</list>
+		</property>
+	</bean>
           
     <bean id="propertyConfigurer"  
     	class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">    
@@ -29,7 +42,9 @@
 		<context:exclude-filter type="annotation"
 			expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
-	<context:annotation-config />
+	<context:annotation-config proxy-target-class="true"/>
+	
+	<aop:aspectj-autoproxy />
 	
 	<!-- data source -->
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">

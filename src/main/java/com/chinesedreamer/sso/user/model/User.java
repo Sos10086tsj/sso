@@ -84,6 +84,12 @@ public class User extends BaseEntity<Long>{
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
+	@Override
+	public String toString() {
+		return "User [username=" + username + ", name=" + name + ", status=" + status + ", email=" + email + ", salt="
+				+ salt + ", password=" + password + "]";
+	}
 	
 	
 }

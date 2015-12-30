@@ -13,7 +13,7 @@ public class IndexController {
 	 * @param model
 	 * @return
 	 */
-	@RequestMapping(value = "/", method = RequestMethod.GET)
+	@RequestMapping(value = "", method = RequestMethod.GET)
 	public String showLogin(Model model){
 		return "login";
 	}

@@ -20,6 +20,9 @@ public class ApplicationKey extends BaseEntity<Long>{
 	
 	@Column(name = "application_key")
 	private String applicationKey;
+	
+	@Column(name = "application_name")
+	private String applicationName;
 
 	public String getApplicationCode() {
 		return applicationCode;
@@ -35,6 +38,20 @@ public class ApplicationKey extends BaseEntity<Long>{
 
 	public void setApplicationKey(String applicationKey) {
 		this.applicationKey = applicationKey;
+	}
+
+	public String getApplicationName() {
+		return applicationName;
+	}
+
+	public void setApplicationName(String applicationName) {
+		this.applicationName = applicationName;
+	}
+
+	@Override
+	public String toString() {
+		return "ApplicationKey [applicationCode=" + applicationCode + ", applicationKey=" + applicationKey
+				+ ", applicationName=" + applicationName + "]";
 	}
 	
 	

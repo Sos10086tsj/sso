@@ -35,7 +35,7 @@
 		<commons.fileupload.version>1.2.1</commons.fileupload.version>
 		<ommons.io.version>2.4</ommons.io.version>
 		<logback.version>1.0.13</logback.version>
-		<aspectj.version>1.5.4</aspectj.version>
+		<aspectj.version>1.8.7</aspectj.version>
 		<commons-codec.version>1.9</commons-codec.version>
 		<javax.mail.version>1.4.4</javax.mail.version>
 		<apache.velocity.version>1.7</apache.velocity.version>
@@ -111,6 +111,16 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jms</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aspects</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
 

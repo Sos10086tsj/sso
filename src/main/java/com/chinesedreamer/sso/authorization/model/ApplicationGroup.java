@@ -36,6 +36,11 @@ public class ApplicationGroup extends BaseEntity<Long>{
 	public void setApplicationCode(String applicationCode) {
 		this.applicationCode = applicationCode;
 	}
+
+	@Override
+	public String toString() {
+		return "ApplicationGroup [groupCode=" + groupCode + ", applicationCode=" + applicationCode + "]";
+	}
 	
 	
 }
